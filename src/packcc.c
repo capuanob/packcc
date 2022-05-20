@@ -3277,6 +3277,11 @@ static code_reach_t generate_code(generate_t *gen, const node_t *node, int onfai
     }
 }
 
+#ifdef FUZZ
+static bool_t generate(context_t *ctx) {
+    return true;
+}
+#else
 static bool_t generate(context_t *ctx) {
     const char *const vt = get_value_type(ctx);
     const char *const at = get_auxil_type(ctx);
@@ -4875,6 +4880,7 @@ static bool_t generate(context_t *ctx) {
     }
     return TRUE;
 }
+#endif
 
 static void print_version(FILE *output) {
     fprintf(output, "%s version %s\n", g_cmdname, VERSION);
