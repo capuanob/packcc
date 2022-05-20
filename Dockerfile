@@ -1,5 +1,5 @@
 # Build Stage
-FROM --platform=linux/amd64 ubuntu:20.04 as builder
+FROM fuzzers/aflplusplus:3.12c as builder
 
 ## Install build dependencies.
 RUN apt-get update && \
@@ -12,19 +12,16 @@ WORKDIR /packcc
 RUN git checkout mayhem
 
 ## Build
-RUN mkdir -p build
-WORKDIR build
-RUN make
+WORKDIR build/afl-clang-fast
+RUN FUZZ=1 make
 
 # Package Stage
-FROM --platform=linux/amd64 ubuntu:20.04
-COPY --from=builder /xml.c/build/fuzz/xml-fuzzer /
+FROM fuzzers/aflplusplus:3.12c
+COPY --from=builder /packcc/build/afl-clang-fast/release/bin/packcc /
 
-## Configure corpus
-RUN mkdir /corpus
-COPY --from=builder /xml.c/test/test.xml /corpus
-COPY --from=builder /xml.c/test/test-attributes.xml /corpus
+## Debugging corpus
+RUN mkdir /tests && echo seed > /tests/seed
 
 ## Set up fuzzing!
-ENTRYPOINT []
-CMD /xml-fuzzer -close_fd_mask=2
+ENTRYPOINT ["afl-fuzz", "-i", "/tests", "-o", "/out"]
+CMD ["/packcc"]
